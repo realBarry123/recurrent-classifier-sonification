@@ -12,9 +12,9 @@ class RClassifier(torch.nn.Module):
         self.activation = activation
 
         self.configs = {
-            "T": self.T,
-            "Z_SIZE": self.Z_SIZE,
-            "CONV_CHANNELS": self.CONV_CHANNELS,
+            "t": self.T,
+            "z_size": self.Z_SIZE,
+            "conv_channels": self.CONV_CHANNELS,
             "activation": self.activation
         }
 
@@ -48,19 +48,23 @@ class RClassifier(torch.nn.Module):
         x = self.relu(x)
 
         x = x.view(-1, self.CONV_CHANNELS*36)
+        batch_size = x.shape[0]
 
         z = torch.zeros((x.shape[0], self.Z_SIZE)).to(DEVICE)
 
-        z_history = []
+        z_history = torch.empty(self.T, batch_size, self.Z_SIZE)
+        out_history = torch.empty(self.T, batch_size, 10)
 
         for i in range(self.T):
             z = torch.cat((x, z), dim=1)
             z = self.z_linear(z)
             z = self.r_activation(z) # bounded (or not) activation function
-            z_history.append(z)
-        z = self.out_linear(z)
+            z_history[i] = z.detach()
+
+            out = self.out_linear(z)
+            out_history[i] = out.detach()
         # z = self.softmax(z) no need, CELoss does it for you
-        return z, z_history
+        return out, z_history, out_history
 
 if __name__ == "__main__":
     model = RClassifier(t=10, z_size=15, conv_channels=1, activation="softsign")
