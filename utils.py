@@ -27,3 +27,10 @@ def plot_history(history):
 
     game = animation.FuncAnimation(fig, update, frames=history)
     plt.show()
+
+def interpolate(history, scale_factor):
+    T, V = history.shape
+    history = history.permute(1, 0).view(1, V, T)
+    history = torch.nn.functional.interpolate(history, scale_factor=scale_factor, mode='linear', align_corners=False)
+    history = history.squeeze().permute(1, 0)
+    return history
