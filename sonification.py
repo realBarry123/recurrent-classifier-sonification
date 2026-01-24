@@ -4,32 +4,33 @@ from scipy.io import wavfile
 from torchvision import datasets, transforms
 from model import RClassifier
 from utils import load, plot_history, interpolate
+
 DEVICE = "mps"
+MODEL_NAME = "01-16.0_10x33"
+SONIFICATION_NAME = "01-24.1_cos_control"
+DATA_INDEX = 2
+CONTROL = False
+DO_INTERPOLATE = False
 
 transform = transforms.ToTensor()
-
 dataset = datasets.FashionMNIST(root=".", train=True, download=True, transform=transform)
 
-print(dataset)
-
-model, _ = load("model.pt")
-#model = RClassifier(**model.configs)
+model, _ = load(f"models/{MODEL_NAME}.pt")
+if CONTROL: 
+    model = RClassifier(**model.configs)
 model = model.to(DEVICE)
 model.T = 128
 
-index = 2
-
-x, y = dataset[index]
+x, y = dataset[DATA_INDEX]
 x = x.to(DEVICE)
 _, z_history, out_history = model(x)
 z_history = z_history.squeeze(1)
 z_history = torch.nn.functional.sigmoid(z_history * 10) * 2000 + 50
-# z_history = torch.nn.functional.sigmoid(z_history) * 440
 out_history = out_history.squeeze(1)
 out_history = torch.nn.functional.softmax(out_history, dim=1)
 T, C = z_history.shape
-#z_history = interpolate(z_history, 8)
-#print(z_history.shape)
+if DO_INTERPOLATE:
+    z_history = interpolate(z_history, 8)
 
 def mix(audio):
     mix = audio.sum(axis=1)
@@ -48,7 +49,7 @@ def sonify(history: torch.Tensor, note_length, fs=44100, do_stereo=True):
 
     audio = np.sin(phase)
     print(audio.shape)
-    # TODO: this is the time for any sort of volume masking
+
     if do_stereo:
         T, C = audio.shape
 
@@ -64,4 +65,4 @@ def sonify(history: torch.Tensor, note_length, fs=44100, do_stereo=True):
         wav = mix(audio)
         return wav
 
-wavfile.write("stereo2.wav", 44100, sonify(z_history[:, :], 0.48))
+wavfile.write(f"{SONIFICATION_NAME}.wav", 44100, sonify(z_history[:, :], 0.48))
