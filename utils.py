@@ -28,6 +28,11 @@ def plot_history(history):
     game = animation.FuncAnimation(fig, update, frames=history)
     plt.show()
 
+def scatterplot(data):
+    fig, ax = plt.subplots()
+    bar_plot = plt.scatter(range(0, len(data)), data, marker=".")
+    plt.show()
+
 def interpolate(history, scale_factor):
     T, V = history.shape
     history = history.permute(1, 0).view(1, V, T)
