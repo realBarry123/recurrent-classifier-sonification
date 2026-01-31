@@ -7,7 +7,7 @@ from utils import *
 
 DEVICE = "mps"
 MODEL_NAME = "01-16.0_10x33"
-SONIFICATION_NAME = "01-30.2_v=1-copilot"
+SONIFICATION_NAME = "01-31.0_t=256"
 DATA_INDEX = 2
 CONTROL = False
 
@@ -18,7 +18,7 @@ model, _ = load(f"models/{MODEL_NAME}.pt")
 if CONTROL: 
     model = RClassifier(**model.configs)
 model = model.to(DEVICE)
-model.T = 128
+model.T = 512
 
 x, y = dataset[DATA_INDEX]
 x = x.to(DEVICE)
@@ -69,4 +69,4 @@ def sonify(history: torch.Tensor, note_length, fs=44100, do_stereo=True, do_inte
         wav = mix(audio)
         return wav
 
-wavfile.write(f"{SONIFICATION_NAME}.wav", 44100, sonify(z_history[:, :], 0.48, do_stereo=False))
+wavfile.write(f"{SONIFICATION_NAME}.wav", 44100, sonify(z_history[:, :], 0.1, do_stereo=True))
