@@ -11,7 +11,7 @@ PATH = "model.pt"
 transform = transforms.ToTensor()
 
 train_set = datasets.FashionMNIST(root=".", train=True, download=True, transform=transform)
-valid_set = datasets.FashionMNIST(root=".", train=True, download=True, transform=transform)
+valid_set = datasets.FashionMNIST(root=".", train=False, download=True, transform=transform)
 
 train_loader = DataLoader(dataset=train_set, batch_size=32, shuffle=True)
 valid_loader = DataLoader(dataset=valid_set, batch_size=32)
