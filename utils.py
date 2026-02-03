@@ -1,4 +1,5 @@
 import torch
+from torch.utils.data import TensorDataset
 from model import RClassifier
 
 def load(path):
@@ -12,6 +13,14 @@ def load(path):
 
 def save(model, epoch, path):
     torch.save([model.state_dict(), model.configs, epoch], path)
+
+def data_subset(dataset, labels):
+    mask = torch.isin(dataset.targets, torch.tensor(labels))
+
+    xs = dataset.data[mask]
+    ys = dataset.targets[mask]
+
+    return TensorDataset(xs, ys)
 
 
 import matplotlib.pyplot as plt
