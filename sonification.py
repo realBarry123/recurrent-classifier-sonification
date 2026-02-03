@@ -7,7 +7,7 @@ from utils import *
 
 DEVICE = "mps"
 MODEL_NAME = "01-16.0_10x33"
-SONIFICATION_NAME = "01-31.0_t=256"
+SONIFICATION_NAME = "02-03.0__"
 DATA_INDEX = 2
 CONTROL = False
 
@@ -22,9 +22,13 @@ model.T = 512
 
 x, y = dataset[DATA_INDEX]
 x = x.to(DEVICE)
-_, z_history, out_history = model(x)
+_ = model(x)
+
+z_history = model.get_history(layer="z")
 z_history = z_history.squeeze(1)
 z_history = torch.nn.functional.sigmoid(z_history * 10) * 2000 + 50
+
+out_history = model.get_history(layer="out")
 out_history = out_history.squeeze(1)
 out_history = torch.nn.functional.softmax(out_history, dim=1)
 

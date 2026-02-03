@@ -11,6 +11,9 @@ class RClassifier(torch.nn.Module):
         self.CONV_CHANNELS = conv_channels
         self.activation = activation
 
+        self.out_history = None
+        self.z_history = None
+
         self.configs = {
             "t": self.T,
             "z_size": self.Z_SIZE,
@@ -43,28 +46,38 @@ class RClassifier(torch.nn.Module):
         self.relu = torch.nn.LeakyReLU()
 
     def forward(self, x):
+        batch_size = x.shape[0]
+        
+        # Reset history storage
+        self.z_history = torch.empty(self.T, batch_size, self.Z_SIZE)
+        self.out_history = torch.empty(self.T, batch_size, 10)
+
         x = self.conv(x)
         x = self.pool(x)
         x = self.relu(x)
 
         x = x.view(-1, self.CONV_CHANNELS*36)
-        batch_size = x.shape[0]
 
         z = torch.zeros((x.shape[0], self.Z_SIZE)).to(DEVICE)
-
-        z_history = torch.empty(self.T, batch_size, self.Z_SIZE)
-        out_history = torch.empty(self.T, batch_size, 10)
 
         for i in range(self.T):
             z = torch.cat((x, z), dim=1)
             z = self.z_linear(z)
             z = self.r_activation(z) # bounded (or not) activation function
-            z_history[i] = z.detach()
+            self.z_history[i] = z.detach()
 
             out = self.out_linear(z)
-            out_history[i] = out.detach()
+            self.out_history[i] = out.detach()
         # z = self.softmax(z) no need, CELoss does it for you
-        return out, z_history, out_history
+        return out
+
+    def get_history(self, layer="z"):
+        if layer == "z": 
+            return self.z_history
+        elif layer == "out":
+            return self.out_history
+        else:
+            raise ValueError(f'layer name not recognized (expected one of: "z", "out"; got "{layer}")')
 
 if __name__ == "__main__":
     model = RClassifier(t=10, z_size=15, conv_channels=1, activation="softsign")

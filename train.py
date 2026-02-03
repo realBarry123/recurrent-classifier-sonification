@@ -24,7 +24,7 @@ def train(model, epoch):
         y = y.to(DEVICE)
         model.train()
         y = torch.nn.functional.one_hot(y, num_classes=10).float()
-        y_hat, _, _ = model(x)
+        y_hat = model(x)
         loss = mse_loss(y, y_hat)
 
         optim.zero_grad()
@@ -40,7 +40,7 @@ def valid(model, epoch):
         y = y.to(DEVICE)
         model.eval()
         with torch.no_grad():
-            out, _, _ = model(x)
+            out = model(x)
             y_hat = out.argmax(dim=1)
             correct += (y == y_hat).sum().item()
             total += y.shape[0]
