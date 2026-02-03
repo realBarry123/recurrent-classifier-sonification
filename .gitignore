@@ -210,3 +210,5 @@ __marimo__/
 *.DS_Store
 FashionMNIST
 *.wav
+*.pt
+pyproject.toml
