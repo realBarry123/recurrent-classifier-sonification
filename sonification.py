@@ -38,6 +38,7 @@ def sonify(history: torch.Tensor, note_length, fs=44100, do_stereo=True, do_inte
         left_mask = torch.arange(1, 0, -1/C).unsqueeze(0).repeat(T, 1)
         right_mask = torch.ones(C).unsqueeze(0).repeat(T, 1) - left_mask
 
+        # TODO: here arrays go torch -> numpy -> torch
         stereo = [mix(audio * left_mask.numpy()), mix(audio * right_mask.numpy())]
         stereo = torch.tensor(stereo).permute(1, 0)
 
@@ -47,7 +48,7 @@ def sonify(history: torch.Tensor, note_length, fs=44100, do_stereo=True, do_inte
         return wav
 
 if __name__ == "__main__":
-    
+
     DEVICE = "mps"
     MODEL_NAME = "02-03.1_16x33"
     SONIFICATION_NAME = "02-03.1_T=16"
