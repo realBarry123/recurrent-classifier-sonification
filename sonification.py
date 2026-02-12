@@ -51,7 +51,7 @@ if __name__ == "__main__":
 
     DEVICE = "mps"
     MODEL_NAME = "02-03.1_16x33"
-    SONIFICATION_NAME = "02-03.1_T=16"
+    SONIFICATION_NAME = "02-11.0_confignorm"
     DATA_INDEX = 2
     CONTROL = False
 
@@ -70,7 +70,9 @@ if __name__ == "__main__":
 
     z_history = model.get_history(layer="z")
     z_history = z_history.squeeze(1)
-    z_history = torch.nn.functional.sigmoid(z_history * 10) * 2000 + 50
+    # Linear normalization
+    z_history = (z_history - torch.min(z_history)) / (torch.max(z_history) - torch.min(z_history)) * 2000 + 50
+    histogram(z_history)
 
     out_history = model.get_history(layer="out")
     out_history = out_history.squeeze(1)
