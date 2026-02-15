@@ -1,9 +1,14 @@
 import torch
 from tqdm import tqdm
 
-def train(model, loader, optim, epoch=0, device="mps"):
+def train(model, loader, optim, epoch=0, device="mps", do_tqdm=True):
     mse_loss = torch.nn.MSELoss()
-    for x, y in tqdm(loader, desc=f"E{epoch} Train"):
+
+    iterator = loader
+    if do_tqdm:
+        iterator = tqdm(iterator, desc=f"E{epoch} Train")
+
+    for x, y in iterator:
         x = x.to(device)
         y = y.to(device)
         model.train()
@@ -16,10 +21,15 @@ def train(model, loader, optim, epoch=0, device="mps"):
         optim.step()
         #print(loss.item())
 
-def valid(model, loader, epoch=0, device="mps"):
+def valid(model, loader, epoch=0, device="mps", do_tqdm=True):
     correct = 0
     total = 0
-    for x, y in tqdm(loader, desc=f"E{epoch} Valid"):
+
+    iterator = loader
+    if do_tqdm:
+        iterator = tqdm(iterator, desc=f"E{epoch} Valid")
+
+    for x, y in iterator:
         x = x.to(device)
         y = y.to(device)
         model.eval()

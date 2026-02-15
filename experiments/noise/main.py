@@ -9,17 +9,14 @@ from sonification import sonify
 from scipy.io import wavfile
 
 DEVICE = "mps"
-REPLICATIONS = 3
+REPLICATIONS = 1
 
 noise_functions = [
     lambda x: x, 
     transforms_v2.GaussianNoise(mean=0.0, sigma=0.05, clip=True), 
     transforms_v2.GaussianNoise(mean=0.0, sigma=0.1, clip=True), 
-    transforms_v2.GaussianNoise(mean=0.0, sigma=0.2, clip=True), 
-    transforms_v2.GaussianNoise(mean=0.0, sigma=0.3, clip=True), 
-    transforms_v2.GaussianNoise(mean=0.0, sigma=0.4, clip=True), 
-    transforms_v2.GaussianNoise(mean=0.0, sigma=0.6, clip=True), 
-    transforms_v2.GaussianNoise(mean=0.0, sigma=0.8, clip=True), 
+    transforms_v2.GaussianNoise(mean=0.0, sigma=0.2, clip=True),
+    transforms_v2.GaussianNoise(mean=0.0, sigma=0.7, clip=True), 
 ]
 transform = transforms.ToTensor()
 
@@ -43,6 +40,7 @@ for i in range(len(noise_functions)):
     valid_loader = DataLoader(dataset=valid_set, batch_size=32) 
 
     for j in range(REPLICATIONS):
+        print(f"Model {str(i)}-{str(j)}:")
         model = RClassifier(
             t=16, 
             z_size=33, 
@@ -52,12 +50,10 @@ for i in range(len(noise_functions)):
 
         optim = torch.optim.Adam(params=model.parameters(), lr=0.0005)
 
-        epoch = 0
+        for epoch in range(6):
 
-        for _ in range(8):
-            train(model, train_loader, optim, epoch=epoch)
-            valid(model, valid_loader, epoch=epoch)
-            epoch += 1
+            train(model, train_loader, optim, epoch=epoch, do_tqdm=False)
+            print(valid(model, valid_loader, epoch=epoch, do_tqdm=False))
             save(model, epoch, f"experiments/noise/{str(i)}-{str(j)}.pt")
 
         with torch.no_grad():
@@ -65,6 +61,6 @@ for i in range(len(noise_functions)):
             _ = model(valid_set[0][0].to(DEVICE))
             z_history = model.get_history(layer="z")
             z_history = z_history.squeeze(1)
-            z_history = torch.nn.functional.sigmoid(z_history * 10) * 2000 + 50
+            z_history = (z_history - torch.min(z_history)) / (torch.max(z_history) - torch.min(z_history)) * 2000 + 50
             wavfile.write(f"experiments/noise/{str(i)}-{str(j)}.wav", 44100, sonify(z_history[:, :], 1, do_stereo=True))
     
