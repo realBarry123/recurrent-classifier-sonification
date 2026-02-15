@@ -51,7 +51,7 @@ if __name__ == "__main__":
 
     DEVICE = "mps"
     MODEL_NAME = "02-03.1_16x33"
-    SONIFICATION_NAME = "02-11.0_confignorm"
+    SONIFICATION_NAME = "02-13.0_thanks-matthew"
     DATA_INDEX = 2
     CONTROL = False
 

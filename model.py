@@ -63,8 +63,8 @@ class RClassifier(torch.nn.Module):
         for i in range(self.T):
             z = torch.cat((x, z), dim=1)
             z = self.z_linear(z)
-            z = self.r_activation(z) # bounded (or not) activation function
             self.z_history[i] = z.detach()
+            z = self.r_activation(z) # bounded (or not) activation function
 
             out = self.out_linear(z)
             self.out_history[i] = out.detach()
