@@ -22,7 +22,10 @@ def train(model, loader, optim, epoch=0, device="mps", do_tqdm=True):
         #print(loss.item())
 
 def valid(model, loader, epoch=0, device="mps", do_tqdm=True):
+    mse_loss = torch.nn.MSELoss()
+
     correct = 0
+    total_loss = 0
     total = 0
 
     iterator = loader
@@ -32,10 +35,11 @@ def valid(model, loader, epoch=0, device="mps", do_tqdm=True):
     for x, y in iterator:
         x = x.to(device)
         y = y.to(device)
+        y = torch.nn.functional.one_hot(y, num_classes=10).float()
         model.eval()
         with torch.no_grad():
-            out = model(x)
-            y_hat = out.argmax(dim=1)
-            correct += (y == y_hat).sum().item()
+            y_hat = model(x)
+            correct += (y.argmax(dim=1) == y_hat.argmax(dim=1)).sum().item()
+            total_loss += mse_loss(y, y_hat).item()
             total += y.shape[0]
-    return correct / total
+    return total_loss / total, correct / total
