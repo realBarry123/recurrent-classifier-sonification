@@ -1,23 +1,22 @@
-import torch
+import torch, copy
 from torchvision import datasets, transforms
 import torchvision.transforms.v2 as transforms_v2
 from torch.utils.data import DataLoader
 from model import RClassifier
-from utils import save
+from utils import save, load
 from train import train, valid
 from sonification import sonify
 from scipy.io import wavfile
 
 DEVICE = "mps"
-REPLICATIONS = 1
+REPLICATIONS = 3
 
 noise_functions = [
     lambda x: x, 
-    transforms_v2.GaussianNoise(mean=0.0, sigma=0.05, clip=True), 
-    transforms_v2.GaussianNoise(mean=0.0, sigma=0.1, clip=True), 
     transforms_v2.GaussianNoise(mean=0.0, sigma=0.2, clip=True),
-    transforms_v2.GaussianNoise(mean=0.0, sigma=0.7, clip=True), 
+    transforms_v2.GaussianNoise(mean=0.0, sigma=0.5, clip=True), 
 ]
+
 transform = transforms.ToTensor()
 
 for i in range(len(noise_functions)):
@@ -29,6 +28,7 @@ for i in range(len(noise_functions)):
         download=True, 
         transform=transforms.Compose([transform, noise_function])
     )
+
     valid_set = datasets.FashionMNIST(
         root=".", 
         train=False, 
@@ -41,6 +41,7 @@ for i in range(len(noise_functions)):
 
     for j in range(REPLICATIONS):
         print(f"Model {str(i)}-{str(j)}:")
+
         model = RClassifier(
             t=16, 
             z_size=33, 
@@ -49,12 +50,20 @@ for i in range(len(noise_functions)):
         ).to(DEVICE)
 
         optim = torch.optim.Adam(params=model.parameters(), lr=0.0005)
+        best_loss = 10 # 10: the worst possible loss ever
 
-        for epoch in range(6):
-
+        for epoch in range(10):
             train(model, train_loader, optim, epoch=epoch, do_tqdm=False)
-            print(valid(model, valid_loader, epoch=epoch, do_tqdm=False))
-            save(model, epoch, f"experiments/noise/{str(i)}-{str(j)}.pt")
+            loss, accuracy = valid(model, valid_loader, epoch=epoch, do_tqdm=False)
+            print(loss, accuracy)
+            if loss < best_loss:
+                best_loss = loss
+                # Save our best model
+                save(model, epoch, f"experiments/noise/{str(i)}-{str(j)}.pt")
+
+        # Load back our best model
+        model, _ = load(f"experiments/noise/{str(i)}-{str(j)}.pt")
+        model = model.to(DEVICE)
 
         with torch.no_grad():
             model.eval()
