@@ -1,4 +1,4 @@
-import torch, copy
+import torch
 from torchvision import datasets, transforms
 import torchvision.transforms.v2 as transforms_v2
 from torch.utils.data import DataLoader
