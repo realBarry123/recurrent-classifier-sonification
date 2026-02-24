@@ -23,8 +23,6 @@ def get_diff_mask(history: torch.Tensor, note_length, fs=44100):
     diff = diff / torch.max(diff)
     diff = interpolate(diff, samples_per_note)
     diff = diff[samples_per_note // 2 : -samples_per_note // 2]
-    print(diff.shape)
-    print(history.shape)
     return diff
 
 def sonify(history: torch.Tensor, note_length, fs=44100, do_stereo=True, do_interpolate=False, do_diff=False):
@@ -36,7 +34,7 @@ def sonify(history: torch.Tensor, note_length, fs=44100, do_stereo=True, do_inte
     samples_per_note = int(fs * note_length)
 
     if do_interpolate:
-        freq_samples = interpolate(history, samples_per_note).cpu().numpy()
+        freq_samples = interpolate(torch.tensor(history), samples_per_note).cpu().numpy()
     else:
         freq_samples = np.repeat(history, samples_per_note, axis=0)
     freq_samples = freq_samples.astype(np.float64) #?
@@ -73,7 +71,7 @@ if __name__ == "__main__":
 
     DEVICE = "mps"
     MODEL_NAME = "02-03.1_16x33"
-    SONIFICATION_NAME = "02-20.0.2_sigmoid-diff"
+    SONIFICATION_NAME = "02-23.0_test"
     DATA_INDEX = 2
     CONTROL = False
 
@@ -100,4 +98,4 @@ if __name__ == "__main__":
     out_history = out_history.squeeze(1)
     out_history = torch.nn.functional.softmax(out_history, dim=1)
 
-    wavfile.write(f"{SONIFICATION_NAME}.wav", 44100, sonify(z_history[:, :], 1, do_stereo=True, do_diff=True))
+    wavfile.write(f"{SONIFICATION_NAME}.wav", 44100, sonify(z_history[:, :], 1, do_interpolate=True, do_stereo=True, do_diff=True))

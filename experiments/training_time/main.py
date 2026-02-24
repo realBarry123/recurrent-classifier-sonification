@@ -33,7 +33,8 @@ full_z_history = torch.empty(0, model.Z_SIZE).to(DEVICE)
 for epoch in range(EPOCHS):
     model.train()
     train(model, train_loader, optim, epoch=epoch, do_tqdm=False)
-    print(valid(model, valid_loader, epoch=epoch, do_tqdm=False))
+    loss, accuracy = valid(model, valid_loader, epoch=epoch, do_tqdm=False)
+    print(loss, accuracy)
     # save(model, epoch, f"experiments/training_time/model.pt")
 
     model.eval()
@@ -42,6 +43,6 @@ for epoch in range(EPOCHS):
         z_history = model.get_history(layer="z").to(DEVICE)
         z_history = z_history.squeeze(1)
         z_history = (z_history - torch.min(z_history)) / (torch.max(z_history) - torch.min(z_history)) * 2000 + 50
-        full_z_history = torch.cat((full_z_history, z_history), dim=0) # segmentation fault
+        full_z_history = torch.cat((full_z_history, z_history), dim=0) 
 
 wavfile.write(f"experiments/training_time/history_1.wav", 44100, sonify(full_z_history[:, :], 0.05, do_stereo=True))
